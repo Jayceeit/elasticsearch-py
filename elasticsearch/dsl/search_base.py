@@ -576,6 +576,7 @@ class SearchBase(Request[_R]):
         s._script_fields.update(kwargs)
         return s
 
+    # EDITED HERE
     def knn(
         self,
         field: Union[str, "InstrumentedField"],
