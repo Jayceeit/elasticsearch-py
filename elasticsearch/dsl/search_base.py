@@ -587,6 +587,8 @@ class SearchBase(Request[_R]):
         filter: Optional[Query] = None,
         similarity: Optional[float] = None,
         inner_hits: Optional[Dict[str, Any]] = None,
+        size=10,
+        from_num=0
     ) -> Self:
         """
         Add a k-nearest neighbor (kNN) search.
@@ -609,10 +611,13 @@ class SearchBase(Request[_R]):
         """
         s = self._clone()
         s._knn.append(
-            {
+            {{
                 "field": str(field),  # str() is for InstrumentedField instances
                 "k": k,
                 "num_candidates": num_candidates,
+            },
+            "size": size,
+            "from": from_num
             }
         )
         if query_vector is None and query_vector_builder is None:
@@ -622,20 +627,20 @@ class SearchBase(Request[_R]):
                 "only one of query_vector and query_vector_builder must be given"
             )
         if query_vector is not None:
-            s._knn[-1]["query_vector"] = cast(Any, query_vector)
+            s._knn[-1]["knn"]["query_vector"] = cast(Any, query_vector)
         if query_vector_builder is not None:
-            s._knn[-1]["query_vector_builder"] = query_vector_builder
+            s._knn[-1]["knn"]["query_vector_builder"] = query_vector_builder
         if boost is not None:
-            s._knn[-1]["boost"] = boost
+            s._knn[-1]["knn"]["boost"] = boost
         if filter is not None:
             if isinstance(filter, Query):
-                s._knn[-1]["filter"] = filter.to_dict()
+                s._knn[-1]["knn"]["filter"] = filter.to_dict()
             else:
-                s._knn[-1]["filter"] = filter
+                s._knn[-1]["knn"]["filter"] = filter
         if similarity is not None:
-            s._knn[-1]["similarity"] = similarity
+            s._knn[-1]["knn"]["similarity"] = similarity
         if inner_hits is not None:
-            s._knn[-1]["inner_hits"] = inner_hits
+            s._knn[-1]["knn"]["inner_hits"] = inner_hits
         return s
 
     def rank(self, rrf: Optional[Union[bool, Dict[str, Any]]] = None) -> Self:
@@ -970,9 +975,9 @@ class SearchBase(Request[_R]):
 
         if self._knn:
             if len(self._knn) == 1:
-                d["knn"] = self._knn[0]
+                d = self._knn[0]
             else:
-                d["knn"] = self._knn
+                d = self._knn
 
         if self._rank:
             d["rank"] = self._rank
