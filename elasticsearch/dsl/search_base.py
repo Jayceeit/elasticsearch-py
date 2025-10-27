@@ -612,7 +612,7 @@ class SearchBase(Request[_R]):
         """
         s = self._clone()
         s._knn.append(
-            {{
+            {"knn" : { 
                 "field": str(field),  # str() is for InstrumentedField instances
                 "k": k,
                 "num_candidates": num_candidates,
